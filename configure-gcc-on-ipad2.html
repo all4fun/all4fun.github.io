@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- 
+                                 _
+                                 | |
+          _ _ _  ____ ____   ____| | _   ____ ____   ____   ___   ____ ____
+         | | | |/ _  |  _ \ / _  | || \ / _  )  _ \ / _  | / _ \ / ___) _  |
+         | | | ( ( | | | | ( ( | | | | ( (/ /| | | ( ( | || |_| | |  ( ( | |
+          \____|\_||_|_| |_|\_|| |_| |_|\____)_| |_|\_|| (_)___/|_|   \_|| |
+                           (_____|                 (_____|           (_____|
+ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="description" content="王恒的技术博客 -- make progress a little day by day"> 
+<meta name="keywords" content="Java,Hadoop,Linux,Shell,C#,PHP,Python,Coder,Arduino,Raspberry pi"> 
+
+<title>为ipad2安装和配置gcc编译环境 | 王恒&#39;s Blog</title>
+
+
+    <link rel="icon" href="/favicon.ico">  
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">  
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/styles/default.min.css">  
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script> 
+    <script src="/js/tocbot.min.js"></script> 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script> 
+
+
+        
+
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">王恒&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/categories">分类</a>
+                
+                    <a class="menu-item" href="/tags">标签</a>
+                
+                    <a class="menu-item" href="/links">友情链接</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default" style="display: none;">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+
+        </div>
+    </nav>
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">王恒&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/categories">分类</a>
+                
+                    <a class="menu-item" href="/tags">标签</a>
+                
+                    <a class="menu-item" href="/links">友情链接</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+</header>
+<script>
+    hljs.initHighlightingOnLoad();
+    document.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelectorAll('pre').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
+    });
+    
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">为ipad2安装和配置gcc编译环境</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">王恒</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">一月 26, 2012&nbsp;&nbsp;15:47:54</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/最近添加/">最近添加</a>
+                            
+                                <a href="/categories/最近添加/技术探讨/">技术探讨</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <content><br>iPad2可不仅仅是一个电子书，也不仅仅是用来看电影大号MP4。<img class="wlEmoticon wlEmoticon-smile" style="border-style: none;" src="uploads/2012/01/wlEmoticon-smile1.png" alt="微笑"> 废话就不多说了，下面介绍的是我给iPad2配置gcc编译环境的过程。<br><br>1、首先你必须越狱，网上教程也很多，这里就不多讲了。<br><br><em><strong>声明：越狱可以让你的ipad运行无签名的可执行文件，但可能损害你的设备，对于你设备可能出现的问题，本文不负任何责任！</strong></em><br><br>好了，现在我假设你的设备已经越狱成功。很棒，下面请让你的ipad接入一个无线网络，后续的步骤也可能需要网络 ：）<br><br>如果你想使用电脑来SSH 到iPad2 你可能需要使用Cydia来安装openssh。<br><br>记得安装完Openssh要修改root和mobile用户的密码哦！（默认是<span style="background-color: #ffff00;">alpine</span>）<br><br>PC端可以可以使用putty 和winscp配合来访问iPad2，MAC系统或者Linux可以使用系统自带的终端 ssh <a href="mailto:root@192.168.1.6" target="_blank" rel="noopener">root@192.168.1.6</a>  。我这里使用的是Tunnelier，它集成了putty 和winscp两款工具的功能，个人感觉很好用！<br><br><strong>可能用的的工具：</strong><br><br>Tunnelier （地址：<a href="http://www.bitvise.com/tunnelier" target="_blank" rel="noopener">www.bitvise.com/<strong>tunnelier</strong></a>）<em><span style="color: #a5a5a5;">推荐</span></em><br><br>putty （地址：<a href="http://www.putty.org/" target="_blank" rel="noopener">www.<strong>putty</strong>.org/</a>）<br><br>winscp（地址：<a title="http://winscp.net/" href="http://winscp.net/" target="_blank" rel="noopener">http://winscp.net/</a>）<br><br><strong>需要在cydia安装一些必要的工具：</strong><br><br>Openssh（提供SSH 服务）<br><br>wget (下载工具）<br><br>unzip 及 zip (解压缩及压缩打包工具）<br><br>sudo（允许普通用户执行root命令的工具）<br><br>make（很强大的工具）<br><br>Aptitude 及 APT 0.6 Transitional (deb 包工具，允许执行apt-get等命令)<br><br><em>是不是觉得iPad2越来越像台电脑了呢？</em> ：)<br><br><a id="more"></a><br><br><strong>2、使用Tunnelier SSH到你的iPad</strong><br><br><a href="uploads/2012/01/image1.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: inline; padding-top: 0px; border-width: 0px;" title="image" src="uploads/2012/01/image_thumb1.png" alt="image" width="508" height="359" border="0"></a><br><br>Host：添入你的iPad的IP地址<br><br>Prot：默认是22<br><br>Username：root（用root或者mobile用户登录，这里是root）<br><br>Password：默认是<span style="background-color: #ffff00;">alpine</span>，如果修改过请填入修改后的密码（再次提醒一定要修改root密码！）<br><br>SPN：不填<br><br><em>为了系统的安全性，建议平时使用普通用户登录。</em><br><br><strong>将mobile用户加到sudo组，在命令行输入：</strong><pre lang="bash">$ visudo</pre><br>这个和vi的用法一样，移动光标到最后一行，按A在最后添加<br><br>mobile ALL=(ALL) ALL<br><br>如图：<br><br><a href="uploads/2012/01/image2.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: inline; padding-top: 0px; border-width: 0px;" title="image" src="uploads/2012/01/image_thumb2.png" alt="image" width="417" height="282" border="0"></a><br><br>使用:wq或者ZZ保存并退出vi。<br><br>以后就可以用 mobile用户登录并使用sudo命令来执行一些危险的操作了！<br><br><strong>3、开始安装</strong><br><br>再次使用mobile用户重新SSH到iPad后，在终端输入以下命令：<br><pre lang="bash" line="1">wget <a href="http://apt.saurik.com/debs/libgcc_4.2-20080410-1-6_iphoneos-arm.deb" target="_blank" rel="noopener">http://apt.saurik.com/debs/libgcc_4.2-20080410-1-6_iphoneos-arm.deb</a><br>sudo dpkg -i libgcc_4.2-20080410-1-6_iphoneos-arm.deb<br>sudo apt-get install iphone-gcc ldid<br>#注：安装ldid为应用程序签名(防止在应用启动时被iOS杀掉)</pre><a href="uploads/2012/01/image3.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: inline; padding-top: 0px; border-width: 0px;" title="image" src="uploads/2012/01/image_thumb3.png" alt="image" width="424" height="279" border="0"></a><br><br><strong>安装 libSystem：</strong><pre lang="bash" line="1">cd /usr/lib/<br>sudo ln -s libSystem.B.dylib libSystem.dylib</pre><strong>下载并安装SDK(IPAD)头文件:</strong><br><br>下载sys32Libheader.tgz 文件到 iPad 路径 /var<br><br><br><a href="http://115.com/file/bhy27ghj" target="_blank">点击下载</a><br><br>也可以将下载下来的tgz包通过sftp传到/var 目录，终端中输入代码：<br><pre lang="bash" line="1">cd /var<br>tar xzvf sys32Libheader.tgz</pre><br>此时gcc的默认include和lib目录里还没有那些sys32的内容。继续如下步骤：<br><br>使用电脑ssh入ipad，或者在ipad里面使用终端，在mobile目录下生成 .bash_profile文件：<br><pre lang="bash" line="1">cd /private/var/mobile<br>vim .bash_profile</pre><br>填入如下内容<br><pre lang="bash" line="1">C_INCLUDE_PATH=/var/sys32/usr/include<br>export C_INCLUDE_PATH<br>CPLUS_INCLUDE_PATH=/var/sys32/usr/include<br>export CPLUS_INCLUDE_PATH<br>LIBRARY_PATH=/var/sys32/usr/lib<br>export LIBRARY_PATH</pre><br>使用:wq或者ZZ保存并退出vim。<br><br>切换成root用户：<br><pre lang="bash" line="1">su – root</pre><br>修改/etc/profile文件，在里面加入一行<br>source /var/mobile/.bash_profile<br><br>切换回mobile用户：<br><pre lang="bash" line="1">su – mobile</pre><br>此时gcc环境已经配置好了！<br><br><strong>使用gcc 测试 hello.c</strong><pre lang="bash" line="1">cd /private/var/mobile<br>vim hello.c</pre><strong>输入下面的内容：</strong><pre lang="c" line="1"><br>#include &lt;stdio.h&gt;<br>main()<br>{<br>printf(“Hello iPad2!\n”);<br>}</pre><br>使用:wq或者ZZ保存并退出。<br><br>编译并执行：<br><pre lang="bash" line="1"><br>gcc hello.c -o hello<br>ldid -S hello<br>./hello<br>#为编译后的应用程序签名的方式是，运行:ldid –S [Aplication];</pre><br>哈哈，看到iPad2上成功的第一次执行了自己写的代码！<br><br>附图：<br><br><a href="uploads/2012/01/image4.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: inline; padding-top: 0px; border: 0px;" title="image" src="uploads/2012/01/image_thumb4.png" alt="image" width="500" height="250" border="0"></a><br><br><em><span style="font-size: x-small;">注：部分内容参考</span></em><a title="http://antirez.com/page/iphone-gcc-guide.html" href="http://antirez.com/page/iphone-gcc-guide.html" target="_blank" rel="noopener"><em><span style="font-size: x-small;">http://antirez.com/page/iphone-gcc-guide.html</span></em></a><br></content>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>王恒</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://wangheng.org/configure-gcc-on-ipad2.html">http://wangheng.org/configure-gcc-on-ipad2.html</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>标签: </span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/ssh/"># ssh</a>
+                    
+                        <a href="/tags/iPad2/"># iPad2</a>
+                    
+                        <a href="/tags/越狱/"># 越狱</a>
+                    
+                        <a href="/tags/GCC/"># GCC</a>
+                    
+                        <a href="/tags/环境搭建/"># 环境搭建</a>
+                    
+                        <a href="/tags/putty/"># putty</a>
+                    
+                        <a href="/tags/Tunnelier/"># Tunnelier</a>
+                    
+                        <a href="/tags/winscp/"># winscp</a>
+                    
+                        <a href="/tags/vim/"># vim</a>
+                    
+                        <a href="/tags/vi/"># vi</a>
+                    
+                        <a href="/tags/visudo/"># visudo</a>
+                    
+                        <a href="/tags/编程/"># 编程</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回前页</a>
+                <span>· </span>
+                <a href="/">回到首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/ipad2-by-vim-installation-and-configuration.html">ipad2下的vim安装和配置</a>
+            
+            
+            <a class="next" rel="next" href="/share-ipad2-jailbreak-tool.html">分享iPad2越狱工具</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© 王恒 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> </span>
+    </div>
+</footer>
+
+    </div>
+</body>
+</html>

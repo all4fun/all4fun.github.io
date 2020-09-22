@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- 
+                                 _
+                                 | |
+          _ _ _  ____ ____   ____| | _   ____ ____   ____   ___   ____ ____
+         | | | |/ _  |  _ \ / _  | || \ / _  )  _ \ / _  | / _ \ / ___) _  |
+         | | | ( ( | | | | ( ( | | | | ( (/ /| | | ( ( | || |_| | |  ( ( | |
+          \____|\_||_|_| |_|\_|| |_| |_|\____)_| |_|\_|| (_)___/|_|   \_|| |
+                           (_____|                 (_____|           (_____|
+ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="description" content="王恒的技术博客 -- make progress a little day by day"> 
+<meta name="keywords" content="Java,Hadoop,Linux,Shell,C#,PHP,Python,Coder,Arduino,Raspberry pi"> 
+
+<title>树莓派Wifi小车(二) | 王恒&#39;s Blog</title>
+
+
+    <link rel="icon" href="/favicon.ico">  
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">  
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/styles/default.min.css">  
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script> 
+    <script src="/js/tocbot.min.js"></script> 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script> 
+
+
+        
+
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">王恒&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/categories">分类</a>
+                
+                    <a class="menu-item" href="/tags">标签</a>
+                
+                    <a class="menu-item" href="/links">友情链接</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default" style="display: none;">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+
+        </div>
+    </nav>
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">王恒&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/categories">分类</a>
+                
+                    <a class="menu-item" href="/tags">标签</a>
+                
+                    <a class="menu-item" href="/links">友情链接</a>
+                
+                    <a class="menu-item" href="/about">关于</a>
+                
+            </div>
+        </div>
+    </nav>
+</header>
+<script>
+    hljs.initHighlightingOnLoad();
+    document.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelectorAll('pre').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
+    });
+    
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">树莓派Wifi小车(二)</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">王恒</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">一月 25, 2015&nbsp;&nbsp;11:17:05</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/最近添加/">最近添加</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <content><br><a title="树莓派Wifi小车(一)" href="http://wangheng.org/raspberry-wifi-car-1.html" target="_blank">上篇文章 </a>之后，继续折腾我的小车，又用C#和Android 写了两个控制客户端。<br><br>思路比较直接，使用POST请求去发送小车转向参数，然后就动起来了。C#不说了，很熟练写起来也非常简单，使用钩子捕获全局键盘，这样及时程序不在前台也能控制小车。<br><br>核心代码如下：<br><pre class="brush: csharp; gutter: true">using System;<br>using System.Collections.Generic;<br>using System.ComponentModel;<br>using System.Data;<br>using System.Diagnostics;<br>using System.Drawing;<br>using System.IO;<br>using System.Linq;<br>using System.Net;<br>using System.Net.Security;<br>using System.Runtime.InteropServices;<br>using System.Text;<br>using System.Windows.Forms;<br><br>namespace WangHeng.Org.PiCar<br>{<br>    public partial class MainFrm : Form<br>    {<br>        public MainFrm()<br>        {<br>            InitializeComponent();<br>            InitControl();<br>            KeyHookUtils.Hook_Start();<br>        }<br><br>        private void InitControl()<br>        {<br>            this.StartPosition = FormStartPosition.CenterScreen;<br>            this.Text = &quot;PiCar Control  v&quot; + this.ProductVersion;<br>            this.MaximizeBox = false;<br>            this.MinimizeBox = true;<br>            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;<br><br>            this.btnDown.Tag = &quot;t_down&quot;;<br>            this.btnLeft.Tag = &quot;t_left&quot;;<br>            this.btnRight.Tag = &quot;t_right&quot;;<br>            this.btnUp.Tag = &quot;t_up&quot;;<br>            this.btnStop.Tag = &quot;t_stop&quot;;<br>            this.statusStrip1.SizingGrip = false;<br>            this.lblPostResultInfo.Text = &quot;启动成功！&quot;;<br>        }<br>        protected override bool ProcessDialogKey(Keys keyData)<br>        {<br>            if (keyData == Keys.Left)<br>            {<br>                lblPostResultInfo.Text = &quot;left&quot;;<br>            }<br>            return base.ProcessDialogKey(keyData);<br>        }<br><br>        private void ctlButton_Click(object sender, EventArgs e)<br>        {<br>            var btn = sender as Button;<br>            var result = CarCtl.TurnFunc(btn.Tag.ToString());<br>            this.lblPostResultInfo.Text = &quot;请求成功 - &quot; + result;<br>        }<br><br><br>    }<br><br>    public static class CarCtl<br>    {<br>        public enum CarStatus<br>        {<br>            Left,<br>            Right,<br>            Up,<br>            Down,<br>            Stop,<br>            Unknown<br>        }<br><br>        public static CarStatus CurrentStatus = CarStatus.Unknown;<br>        public static string TurnFunc(string direcID)<br>        {<br>            try<br>            {<br>                var requestUrl = &quot;<a href="http://192.168.1.171:2000/ctl&quot;" target="_blank" rel="noopener">http://192.168.1.171:2000/ctl&quot;</a>;<br>                var requestData = new Dictionary&lt;string, string&gt;() { { &quot;id&quot;, direcID } };<br>                var requestUserAgent = &quot;WangHeng PiCar/v1.0&quot;;<br>                var requestEncoding = Encoding.Default;<br>                var result = HttpUtility.CreatePostHttpResponse(<br>                        requestUrl,<br>                        requestData,<br>                        5000,<br>                        requestUserAgent,<br>                        requestEncoding,<br>                        null);<br><br>                using (var sr = new StreamReader(result.GetResponseStream(), requestEncoding))<br>                {<br>                    return sr.ReadToEnd();<br>                }<br>            }<br>            catch (Exception ex)<br>            {<br>                return null;<br>            }<br>        }<br>    }<br><br><br>    public class KeyHookUtils<br>    {<br>        [StructLayout(LayoutKind.Sequential)]<br>        public class KeyBoardHookStruct<br>        {<br>            public int vkCode;<br>            public int scanCode;<br>            public int flags;<br>            public int time;<br>            public int dwExtraInfo;<br>        }<br>        //委托<br>        public delegate int HookProc(int nCode, int wParam, IntPtr lParam);<br>        static int hHook = 0;<br>        public const int WH_KEYBOARD_LL = 13;<br>        //LowLevel键盘截获，如果是WH_KEYBOARD＝2，并不能对系统键盘截取，Acrobat Reader会在你截取之前获得键盘。<br>        static HookProc KeyBoardHookProcedure;<br><br>        //设置钩子<br>        [DllImport(&quot;user32.dll&quot;)]<br>        public static extern int SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hInstance, int threadId);<br><br>        //抽掉钩子<br>        [DllImport(&quot;user32.dll&quot;, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]<br>        public static extern bool UnhookWindowsHookEx(int idHook);<br><br>        //调用下一个钩子<br>        [DllImport(&quot;user32.dll&quot;)]<br>        public static extern int CallNextHookEx(int idHook, int nCode, int wParam, IntPtr lParam);<br><br>        [DllImport(&quot;kernel32.dll&quot;)]<br>        public static extern int GetCurrentThreadId();<br><br>        [DllImport(&quot;kernel32.dll&quot;)]<br>        public static extern IntPtr GetModuleHandle(string name);<br><br>        public static void Hook_Start()<br>        {<br>            if (hHook == 0)<br>            {<br>                KeyBoardHookProcedure = new HookProc(KeyBoardHookProc);<br>                hHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyBoardHookProcedure,<br>                        GetModuleHandle(Process.GetCurrentProcess().MainModule.ModuleName), 0);<br>                //如果设置钩子失败.<br>                if (hHook == 0)<br>                {<br>                    Hook_Clear();<br>                }<br>            }<br>        }<br><br>        /// &lt;summary&gt;<br>        /// 取消钩子事件<br>        /// &lt;/summary&gt;<br>        public static void Hook_Clear()<br>        {<br>            bool retKeyboard = true;<br>            if (hHook != 0)<br>            {<br>                retKeyboard = UnhookWindowsHookEx(hHook);<br>                hHook = 0;<br>            }<br>        }<br><br>        public static int KeyBoardHookProc(int nCode, int wParam, IntPtr lParam)<br>        {<br>            if (nCode &gt;= 0)<br>            {<br>                KeyBoardHookStruct kbh = (KeyBoardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyBoardHookStruct));<br>                Keys k = (Keys)Enum.Parse(typeof(Keys), kbh.vkCode.ToString());<br>                switch (k)<br>                {<br>                    case Keys.Left:<br>                        if (kbh.flags == 1)<br>                        {<br>                            // 这里写按下后做什么事<br>                            if (CarCtl.CurrentStatus != CarCtl.CarStatus.Up)<br>                            {<br>                                CarCtl.TurnFunc(&quot;t_left&quot;);<br>                                CarCtl.CurrentStatus = CarCtl.CarStatus.Up;<br>                            }<br>                        }<br>                        else if (kbh.flags == 129)<br>                        {<br>                            //放开后做什么事<br>                            CarCtl.TurnFunc(&quot;t_stop&quot;);<br>                            CarCtl.CurrentStatus = CarCtl.CarStatus.Stop;<br>                        }<br>                        return 1;<br>                    case Keys.Up:<br>                        if (kbh.flags == 1)<br>                        {<br>                            // 这里写按下后做什么事<br>                            if (CarCtl.CurrentStatus != CarCtl.CarStatus.Up)<br>                            {<br>                                CarCtl.TurnFunc(&quot;t_up&quot;);<br>                                CarCtl.CurrentStatus = CarCtl.CarStatus.Up;<br>                            }<br>                        }<br>                        else if (kbh.flags == 129)<br>                        {<br>                            //放开后做什么事<br>                            CarCtl.TurnFunc(&quot;t_stop&quot;);<br>                            CarCtl.CurrentStatus = CarCtl.CarStatus.Stop;<br>                        }<br>                        return 1;<br>                    case Keys.Right:<br>                        if (kbh.flags == 1)<br>                        {<br>                            if (CarCtl.CurrentStatus != CarCtl.CarStatus.Up)<br>                            {<br>                                CarCtl.TurnFunc(&quot;t_right&quot;);<br>                                CarCtl.CurrentStatus = CarCtl.CarStatus.Up;<br>                            }<br>                        }<br>                        else if (kbh.flags == 129)<br>                        {<br>                            //放开后做什么事<br>                            CarCtl.TurnFunc(&quot;t_stop&quot;);<br>                            CarCtl.CurrentStatus = CarCtl.CarStatus.Stop;<br>                        }<br>                        return 1;<br>                    case Keys.Down:<br>                        if (kbh.flags == 1)<br>                        {<br>                            if (CarCtl.CurrentStatus != CarCtl.CarStatus.Up)<br>                            {<br>                                CarCtl.TurnFunc(&quot;t_down&quot;);<br>                                CarCtl.CurrentStatus = CarCtl.CarStatus.Up;<br>                            }<br>                        }<br>                        else if (kbh.flags == 129)<br>                        {<br>                            //放开后做什么事<br>                            CarCtl.TurnFunc(&quot;t_stop&quot;);<br>                            CarCtl.CurrentStatus = CarCtl.CarStatus.Stop;<br>                        }<br>                        return 1;<br>                    default:<br>                        break;<br>                }<br>            }<br>            return CallNextHookEx(hHook, nCode, wParam, lParam);<br>        }<br>    }<br>}<br><br></pre><br>这里主要说一下Android 的客户端<a id="more"></a><br><br>Android之前虽没怎么接触过，但凭着自己一些基础，还是慢慢摸索到了门路。唯一比较坑的是，在获取Wifi权限的时候，照着网上的介绍改了AndroidManifest.xml 加入<br><pre class="brush: java; gutter: true">    &lt;uses-permission android:name=&quot;android.permission.ACCESS_WIFI_STATE&quot;/&gt;<br>    &lt;uses-permission android:name=&quot;android.permission.INTERNET&quot;/&gt;<br>    &lt;uses-permission android:name=&quot;android.permission.WAKE_LOCK&quot;/&gt;<br>    &lt;uses-permission android:name=&quot;android.permission.CHANGE_WIFI_STATE&quot;/&gt;<br>    &lt;uses-permission android:name=&quot;android.permission.ACCESS_NETWORK_STATE&quot;/&gt;</pre><br>依然没有访问网络的权限 :(<br><br>为此还特意加了几个Android的开发群，但是群里一个个爱答不理，趾高气扬的态度，我就呵呵了。果断退群，还是得靠自己，扶梯子上Google，一顿搜搜搜，果然有同病相怜的朋友。<br><br>原因竟然是一个小问题目标SDK版本不对。。。好吧，果然弱爆了。<br><br><a href="uploads/2015/01/android_target_sdk_version_error.png"><img class="alignleft size-medium wp-image-95041" src="uploads/2015/01/android_target_sdk_version_error-300x76.png" alt="android_target_sdk_version_error" width="300" height="76"></a><br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>按上图将Target SDK Version 从18改成19，运行，测试，这次果然可以了。如下：<br><br><a href="uploads/2015/01/piCar_screenshot.png"><img class="alignleft size-medium wp-image-95042" src="uploads/2015/01/piCar_screenshot-168x300.png" alt="piCar截图" width="168" height="300"></a><br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>&nbsp;<br><br>代码也比较简单，核心代码如下：<br><pre class="brush: java; gutter: true">package com.apiof.picar;<br><br>import java.io.BufferedReader;<br>import java.io.IOException;<br>import java.io.InputStreamReader;<br>import java.net.HttpURLConnection;<br>import java.net.InetAddress;<br>import java.net.MalformedURLException;<br>import java.net.NetworkInterface;<br>import java.net.SocketException;<br>import java.net.URL;<br>import java.util.Enumeration;<br>import java.util.HashMap;<br>import java.util.Map;<br><br>import android.net.wifi.WifiInfo;<br>import android.net.wifi.WifiManager;<br>import android.os.Bundle;<br>import android.os.StrictMode;<br>import android.app.Activity;<br>import android.app.AlertDialog;<br>import android.content.Context;<br>import android.content.DialogInterface;<br>import android.util.Log;<br>import android.view.KeyEvent;<br>import android.view.Menu;<br>import android.view.View;<br>import android.view.WindowManager;<br>import android.widget.Button;<br>import android.widget.TextView;<br>import android.widget.Toast;<br>import android.view.View.OnClickListener;<br><br>public class MainActivity extends Activity {<br><br>    @Override<br>    protected void onCreate(Bundle savedInstanceState) {<br>        super.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br>        // 禁止屏幕锁屏，也可以用View.setKeepScreenOn(boolean)来实现<br>        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);<br>        InitHandler();<br><br>        TestNetWork();<br>    }<br><br>    public void DisplayToast(String str)<br>    {<br>        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();<br>    }<br><br>    public boolean onKeyDown(int KeyCode, KeyEvent event) {<br>        switch (KeyCode) {<br>        case KeyEvent.KEYCODE_0:<br>            DisplayToast(&quot;按下数字0&quot;);<br>            break;<br>        }<br>        return super.onKeyDown(KeyCode, event);<br>    }<br><br>    @Override<br>    public boolean onKeyUp(int keyCode,KeyEvent event){<br>        switch(keyCode){<br>        case KeyEvent.KEYCODE_0:<br>            DisplayToast(&quot;松开数字0&quot;);<br>            break;<br>        }<br>        return super.onKeyUp(keyCode, event);<br>    }<br><br>    public void TestNetWork() {<br><br>        String strUrl = &quot;<a href="http://nas.apiof.com:2000&quot;" target="_blank" rel="noopener">http://nas.apiof.com:2000&quot;</a>;<br>        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()<br>                .detectDiskReads().detectDiskWrites().detectNetwork()<br>                .penaltyLog().build());<br>        URL url = null;<br>        try {<br>            url = new URL(strUrl);<br>            System.out.println(url.getPort());<br>            HttpURLConnection urlConn = (HttpURLConnection) url<br>                    .openConnection();<br>            InputStreamReader in = new InputStreamReader(<br>                    urlConn.getInputStream());<br>            BufferedReader br = new BufferedReader(in);<br>            String result = &quot;&quot;;<br>            String readerLine = null;<br>            while ((readerLine = br.readLine()) != null) {<br>                result += readerLine;<br>            }<br>            in.close();<br>            urlConn.disconnect();<br><br>            System.out.println(&quot;r:&quot; + result);<br>            TextView textView = (TextView) this.findViewById(R.id.textView2);<br>            textView.setText(result);<br>        } catch (MalformedURLException e) {<br>            // TODO Auto-generated catch block<br>            e.printStackTrace();<br>        } catch (IOException e) {<br>            // TODO Auto-generated catch block<br>            e.printStackTrace();<br>        }<br>    }<br><br>    @Override<br>    public void onBackPressed() {<br>        new AlertDialog.Builder(this).setTitle(&quot;确认退出吗？&quot;)<br>                .setIcon(android.R.drawable.ic_dialog_info)<br>                .setPositiveButton(&quot;确定&quot;, new DialogInterface.OnClickListener() {<br><br>                    @Override<br>                    public void onClick(DialogInterface dialog, int which) {<br>                        // 点击“确认”后的操作<br>                        MainActivity.this.finish();<br>                    }<br>                })<br>                .setNegativeButton(&quot;返回&quot;, new DialogInterface.OnClickListener() {<br><br>                    @Override<br>                    public void onClick(DialogInterface dialog, int which) {<br>                        // 点击“返回”后的操作,这里不设置没有任何操作<br>                    }<br>                }).show();<br>    }<br><br>    @Override<br>    public boolean onCreateOptionsMenu(Menu menu) {<br>        // Inflate the menu; this adds items to the action bar if it is present.<br>        getMenuInflater().inflate(R.menu.main, menu);<br>        return true;<br>    }<br><br>    private String intToIp(int i) {<br><br>        return (i &amp; 0xFF) + &quot;.&quot; + ((i &gt;&gt; 8) &amp; 0xFF) + &quot;.&quot; + ((i &gt;&gt; 16) &amp; 0xFF)<br>                + &quot;.&quot; + (i &gt;&gt; 24 &amp; 0xFF);<br>    }<br><br>    public String getLocalIpAddress() {<br>        try {<br>            for (Enumeration&lt;NetworkInterface&gt; en = NetworkInterface<br>                    .getNetworkInterfaces(); en.hasMoreElements();) {<br>                NetworkInterface intf = en.nextElement();<br>                for (Enumeration&lt;InetAddress&gt; enumIpAddr = intf<br>                        .getInetAddresses(); enumIpAddr.hasMoreElements();) {<br>                    InetAddress inetAddress = enumIpAddr.nextElement();<br>                    if (!inetAddress.isLoopbackAddress()) {<br>                        return inetAddress.getHostAddress().toString();<br>                    }<br>                }<br>            }<br>        } catch (SocketException ex) {<br>            Log.e(&quot;WifiPreference IpAddress&quot;, ex.toString());<br>        }<br>        return null;<br>    }<br><br>    public void InitHandler() {<br>        // 获取wifi服务<br>        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);<br>        // 判断wifi是否开启<br>        if (!wifiManager.isWifiEnabled()) {<br>            wifiManager.setWifiEnabled(true);<br>        }<br>        WifiInfo wifiInfo = wifiManager.getConnectionInfo();<br>        int ipAddress = wifiInfo.getIpAddress();<br>        String ip = intToIp(ipAddress);<br>        TextView txt1 = (TextView) findViewById(R.id.textView1);<br>        txt1.setText(txt1.getText() + &quot;\r\nLocal IP: &quot; + ip);<br><br><br>        ((Button)findViewById(R.id.btnStop)).setOnClickListener(stopHandler);<br>        ((Button)findViewById(R.id.btnForward)).setOnClickListener(upHandler);<br>        ((Button)findViewById(R.id.btnBackward)).setOnClickListener(downHandler);<br>        ((Button)findViewById(R.id.btnTurnLeft)).setOnClickListener(leftHandler);<br>        ((Button)findViewById(R.id.btnTurnRight)).setOnClickListener(rightHandler);<br>    }<br><br>    private void Trun(String id) {<br>        TextView txt = (TextView) findViewById(R.id.textView2);<br>        try {<br>            String requestUrl = &quot;<a href="http://192.168.1.171:2000/ctl&quot;" target="_blank" rel="noopener">http://192.168.1.171:2000/ctl&quot;</a>;<br>            Map&lt;String, String&gt; requestParams = new HashMap&lt;String, String&gt;();<br>            requestParams.put(&quot;id&quot;, id);<br>            String result = HttpUtils.submitPostData(requestUrl,<br>                    requestParams, &quot;utf-8&quot;);<br><br>            txt.setText(&quot;turn to: &quot;+result);<br>        } catch (Throwable e) {<br>            e.printStackTrace();<br>        }<br>    }<br><br>    private OnClickListener stopHandler=new OnClickListener() {<br>        public void onClick(View v) {<br>            Trun(&quot;t_stop&quot;);<br>        }<br>    };<br>    private OnClickListener leftHandler=new OnClickListener() {<br>        public void onClick(View v) {<br>            Trun(&quot;t_left&quot;);<br>        }<br>    };<br>    private OnClickListener rightHandler=new OnClickListener() {<br>        public void onClick(View v) {<br>            Trun(&quot;t_right&quot;);<br>        }<br>    };<br>    private OnClickListener upHandler=new OnClickListener() {<br>        public void onClick(View v) {<br>            Trun(&quot;t_up&quot;);<br>        }<br>    };<br>    private OnClickListener downHandler=new OnClickListener() {<br>        public void onClick(View v) {<br>            Trun(&quot;t_down&quot;);<br>        }<br>    };<br><br>}</pre><br>完整的代码放到了我的Github 共享，需要的朋友可以参考下载：<br><br><a title="pi小车 Android 源码" href="https://github.com/wujiwh/piCar/tree/master/client/android" target="_blank">https://github.com/wujiwh/piCar/tree/master/client/android</a><br></content>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>王恒</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://wangheng.org/raspberry-wifi-car-2.html">http://wangheng.org/raspberry-wifi-car-2.html</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>标签: </span>
+                <span class="tag">
+                    
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">返回前页</a>
+                <span>· </span>
+                <a href="/">回到首页</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+                <a class="prev" rel="prev" href="/raspberry-wifi-car-3.html">树莓派Wifi小车(三)</a>
+            
+            
+            <a class="next" rel="next" href="/raspberry-wifi-car-1.html">树莓派Wifi小车(一)</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© 王恒 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> </span>
+    </div>
+</footer>
+
+    </div>
+</body>
+</html>

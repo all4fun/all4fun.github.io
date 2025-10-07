@@ -1,0 +1,209 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>JavaScript中的鼠标滚轮事件 | all4fun blog</title><meta name="author" content="all4fun"><meta name="copyright" content="all4fun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Firefox使用DOMMouseScroll，其他的浏览器使用mousewheel。滚动事件触发时Firefox使用detail属性捕捉滚轮信息，其他的浏览器使用wheelDelta。不知道为何在该问题上其他厂商和微软的如此一致。Firefox可以使用addEventListener方法绑定DomMouseScroll事件。 elem.addEventListener(&amp;#039;DOMMou">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript中的鼠标滚轮事件">
+<meta property="og:url" content="http://wangheng.org/javascript-mouse-wheel-event.html">
+<meta property="og:site_name" content="all4fun blog">
+<meta property="og:description" content="Firefox使用DOMMouseScroll，其他的浏览器使用mousewheel。滚动事件触发时Firefox使用detail属性捕捉滚轮信息，其他的浏览器使用wheelDelta。不知道为何在该问题上其他厂商和微软的如此一致。Firefox可以使用addEventListener方法绑定DomMouseScroll事件。 elem.addEventListener(&amp;#039;DOMMou">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://wangheng.org/img/avatar.png">
+<meta property="article:published_time" content="2012-11-18T10:08:04.000Z">
+<meta property="article:modified_time" content="2025-05-10T10:23:15.624Z">
+<meta property="article:author" content="all4fun">
+<meta property="article:tag" content="html">
+<meta property="article:tag" content="javascript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://wangheng.org/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "JavaScript中的鼠标滚轮事件",
+  "url": "http://wangheng.org/javascript-mouse-wheel-event.html",
+  "image": "http://wangheng.org/img/avatar.png",
+  "datePublished": "2012-11-18T10:08:04.000Z",
+  "dateModified": "2025-05-10T10:23:15.624Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "all4fun",
+      "url": "http://wangheng.org"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="http://wangheng.org/javascript-mouse-wheel-event.html"><link rel="preconnect"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/pluginsSrc/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: all4fun","link":"链接: ","source":"来源: all4fun blog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: '/pluginsSrc/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'JavaScript中的鼠标滚轮事件',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 5.4.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">132</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/wiki/"><i class="fa-fw fas fa-pencil-alt"></i><span> 笔记</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 其他</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/projects/"><i class="fa-fw fas fa-boxes"></i><span> 作品</span></a></li><li><a class="site-page child" href="/files/"><i class="fa-fw fas fa-folder-open"></i><span> 文件</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">all4fun blog</span></a><a class="nav-page-title" href="/"><span class="site-name">JavaScript中的鼠标滚轮事件</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/wiki/"><i class="fa-fw fas fa-pencil-alt"></i><span> 笔记</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 其他</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/projects/"><i class="fa-fw fas fa-boxes"></i><span> 作品</span></a></li><li><a class="site-page child" href="/files/"><i class="fa-fw fas fa-folder-open"></i><span> 文件</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JavaScript中的鼠标滚轮事件</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2012-11-18T10:08:04.000Z" title="发表于 2012-11-18 18:08:04">2012-11-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Technical/">Technical</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><content>
+Firefox使用DOMMouseScroll，其他的浏览器使用mousewheel。滚动事件触发时Firefox使用detail属性捕捉滚轮信息，其他的浏览器使用wheelDelta。不知道为何在该问题上其他厂商和微软的如此一致。Firefox可以使用<code>addEventListener</code>方法绑定DomMouseScroll事件。
+<pre class="brush:javascript">elem.addEventListener(&#039;DOMMouseScroll&#039;, func, false);</pre>
+IE和其他的主流浏览器可以使用传统的事件绑定模型。但不要使用IE专有的<code>attachEvent</code>方法，其他主流浏览器并不识别微软的这个方法。下面先测试一下。
+<div id="mouseWheel" style="height: 40px; background-color: #ffffcc; text-align: center; line-height: 40px; font-size: 14px; border: 1px solid #dcdcdc;">120</div><script type="text/javascript">// <![CDATA[
+var mouseWheel = document.getElementById('mouseWheel'); if (mouseWheel.addEventListener) {     mouseWheel.addEventListener('DOMMouseScroll', function(event) {         event.target.innerHTML = event.detail;   event.stopPropagation();  event.preventDefault(); }, false); } mouseWheel.onmousewheel = function(event) {     event = event || window.event;     mouseWheel.innerHTML = event.wheelDelta; event.returnValue = false; }
+// ]]></script><pre class="brush: javascript; gutter: true">&lt;script type=&quot;text/javascript&quot;&gt;
+    // &lt;![CDATA[
+    var mouseWheel = document.getElementById(&#039;mouseWheel&#039;);
+    
+    if (mouseWheel.addEventListener) {
+        
+        mouseWheel.addEventListener(&#039;DOMMouseScroll&#039;, function(event) {
+            
+            event.target.innerHTML = event.detail;
+            event.stopPropagation();
+            event.preventDefault();
+            
+        }, false);
+    }
+    mouseWheel.onmousewheel = function(event) {
+        
+        event = event || window.event;
+        mouseWheel.innerHTML = event.wheelDelta;
+        event.returnValue = false;
+        
+    }
+    // ]]&gt;
+&lt;/script&gt;</pre>
+测试之后得到如下的结论。
+<pre>    Firefox
+    鼠标滚轮向上滚动是-3，向下滚动是3
+
+<pre><code>IE
+鼠标滚轮向上滚动是120，向下滚动是-120
+
+Safari
+鼠标滚轮向上滚动是360，向下滚动是-360
+
+Opera
+鼠标滚轮向上滚动是120，向下滚动是-120
+
+Chrome
+鼠标滚轮向上滚动是120，向下滚动是-120&lt;/pre&gt;
+</code></pre>
+<p>有人在Safari下做了一些测试：”只是滚动一圈的话，值为+-0.1，如果滚动地稍微快点的话（多滚动几圈），这个值也会变大。 这是因为Mac OS下有鼠标滚轮加速功能。滚动一次，浏览器滚动1像素，滚动3次，浏览器却滚动30像素”。同时他也对Camino（基于Gecko的内核引擎）进行研究：“与Safari相似（+- 0.3 to +-Infinity），虽然使用了与firefox相同的内核引擎，但结果这个delta值却只在+-2.666666里浮动，无论滚动速度如何。”<br></content></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://wangheng.org">all4fun</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://wangheng.org/javascript-mouse-wheel-event.html">http://wangheng.org/javascript-mouse-wheel-event.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://wangheng.org" target="_blank">all4fun blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/html/">html</a><a class="post-meta__tags" href="/tags/javascript/">javascript</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="/pluginsSrc/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="/pluginsSrc/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/imgages/wechat.png" target="_blank"><img class="post-qr-code-img" src="/imgages/wechat.png" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/imgages/alipay.png" target="_blank"><img class="post-qr-code-img" src="/imgages/alipay.png" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/configure-nginx-to-support-thinkphp-pathinfo-mode.html" title="配置nginx伪静态以支持ThinkPHP的PATHINFO模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">配置nginx伪静态以支持ThinkPHP的PATHINFO模式</div></div><div class="info-2"><div class="info-item-1"> ThinkPHP是一款很不错的框架，也是PHP开发中最近用的比较火的。平时在本地开发中打开apache的modrewrite 配合.htaccess文件就可以完美的支持ThinkPHP的PATHINFO模式，但是家里的linux机器搭建的却是nginx 环境。这就造成了url 重写出现了很多奇怪的问题，所以需要对nginx 的配置文件修改一下来让它支持ThinkPHP的框架。 首先你的项目的config文件中要配置这一项   &#039;URL_MODEL&#039; =&gt; 2, // rewrite 在服务器中切换到nginx的安装目录，我这里是 /usr/local/nginx。然后添加thinkphp.conf 文件  vim /usr/local/nginx/conf/thinkphp.conf内容如下 location / {   if (!-e $request_filename){   rewrite ^/(.*)$ /index.php?s=/$1 last;   } }  然后在你的配置文件中include一下刚刚的配置文件。   如果你的ThinkPH...</div></div></div></a><a class="pagination-related" href="/sae-used-tmpfs-function.html" title="SAE中使用TmpFS功能"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">SAE中使用TmpFS功能</div></div><div class="info-2"><div class="info-item-1"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 前一段时间做的项目需要提供导出CSV报表的功能，我用php直接拼出csv的文件流输出到页面，以提供csv文件的下载，功能在wamp环境中运行很正常，但是到了SAE平台却怎么都不好使。不管是改请求的响应头content-type 还是修改输出的文件格式，每次SAE都是把内容直接输出在了页面。因为SAE不支持通用方式的本地IO，于是想到了使用SAE提供的tmpFS功能。TmpFS因为平台安全性的考虑，SAE限制了用户对于本地IO的使用，但这样对于一些传统的PHP项目，也许带来了很多不便，因为它们都或多或少的有对本地 IO的操作，像Smarty的编译模板。为了解决这个问题，SAE提供了TmpFS功能。TmpFS允许开发者通过标准的IO函数临时读写本地IO，这样 方便了很多非SAE项目的移植。  特别注意： 临时文件的生存周期等同于PHP请求，也就是当该PHP请求完成执行时，所有写入TmpFS的临时文件都会被销毁TmpFS是本地临时文件，不是共享存储，而SAE是全分布式环境，所以不同请求之间无法通过T...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/html-page-several-methods-of-jump.html" title="HTML 页面跳转的几种方法"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2011-06-01</div><div class="info-item-2">HTML 页面跳转的几种方法</div></div><div class="info-2"><div class="info-item-1"> 1、使用Html实现   &lt;!—使用下面的方式只是刷新不跳转 –&gt;        2、使用javascript实现    // 使用以下的方式可以直接跳转  window.location.href='hi.html';  // 使用以下方式定时跳转，同样是五秒后跳转的hi.html页面，具体请自行更改  setTimeout("javascript:location.href='hi.html' ", 5000);   当然还有很多中实现的方法，写到博客仅仅是为了方便查询，欢迎各位高手指教！  </div></div></div></a><a class="pagination-related" href="/javascript-coding-decoding-method.html" title="Javascript编码解码方法"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-09-16</div><div class="info-item-2">Javascript编码解码方法</div></div><div class="info-2"><div class="info-item-1"> ASP（Server.UrlEncode）、PHP（urlencode()）函数编码结果，或是经过asp、php等动态语言直接写入COOKIES的中文字符，用JS读取的时候，都会碰到一个编码的问题，那就是最终字符串被urlencode编码了，而又时有需要从JS在客户端去读取这些数据。而本文，就大概说说如何在js中通过系统自带的函数去解决这个问题。  而相信碰到过此问题的朋友应该都有所了解，目前网络上流行一些js下的自定义函数去解决这个问题，如说vbscript（URLDecode()）、javascript（UrlDecode()）等。而这两个函数，都无法很好的与asp（Server.UrlEncode）、php（urlencode()）这两个函数相互通讯。 javascript（UrlDecodedecodeURIComponent()）这个函数名称实在太常了，个人真的不太了解，毕竟js的系统函数很多，很容易遗漏。烦恼在偶然间发现了这个函数！编码函数：encodeURIComponent()解码函数：decodeURIComponent()decodeURIComponent...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">all4fun</div><div class="author-info-description">make progress little day by day.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">132</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/all4fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/all4fun" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:wujiwh@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">VPS 香港服务器推荐：<a href="https://vollcloud.com/aff.php?aff=224" target="_blank"> VollCloud HK CMI服务器</a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/migrating-from-wordpress-to-hexo.html" title="从wordpress迁移到hexo填坑">从wordpress迁移到hexo填坑</a><time datetime="2018-10-22T05:50:30.000Z" title="发表于 2018-10-22 13:50:30">2018-10-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/kuaipan-uploader-dev-share.html" title="kuaipan_uploader开发分享">kuaipan_uploader开发分享</a><time datetime="2015-05-27T05:01:02.000Z" title="发表于 2015-05-27 13:01:02">2015-05-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/kuaipan-uploader.html" title="linux版快盘上传下载脚本">linux版快盘上传下载脚本</a><time datetime="2015-05-13T09:16:39.000Z" title="发表于 2015-05-13 17:16:39">2015-05-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/ubuntu-14-04-install-configure-denyhosts.html" title="ubuntu 安装配置denyhosts">ubuntu 安装配置denyhosts</a><time datetime="2015-05-06T01:19:37.000Z" title="发表于 2015-05-06 09:19:37">2015-05-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/raspberry-dht11-yeekink.html" title="raspi+DHT11+yeelink监控家里温湿度">raspi+DHT11+yeelink监控家里温湿度</a><time datetime="2015-01-27T16:25:09.000Z" title="发表于 2015-01-28 00:25:09">2015-01-28</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 By all4fun</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/pluginsSrc/medium-zoom/dist/medium-zoom.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

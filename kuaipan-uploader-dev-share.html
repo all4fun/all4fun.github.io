@@ -1,0 +1,634 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>kuaipan_uploader开发分享 | all4fun blog</title><meta name="author" content="all4fun"><meta name="copyright" content="all4fun"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="PS：将原来的一篇文章拆开了，上篇是安装使用讲解，这篇是开发过程讲解。  以前使用dropbox的linux客户端备份VPS上的文件和数据，但是近来dorpbox在国内越来越难访问，加上dropbox本身的容量只有几G，于是有了自己动刀写一个网盘的客户端，首先想到的是百度网盘，2T的巨大容量肯定是够用了！ 没想到这个决定却是悲剧的开始，按照百度PCS的API文档写了半天，没想到PCS开通居然审核">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kuaipan_uploader开发分享">
+<meta property="og:url" content="http://wangheng.org/kuaipan-uploader-dev-share.html">
+<meta property="og:site_name" content="all4fun blog">
+<meta property="og:description" content="PS：将原来的一篇文章拆开了，上篇是安装使用讲解，这篇是开发过程讲解。  以前使用dropbox的linux客户端备份VPS上的文件和数据，但是近来dorpbox在国内越来越难访问，加上dropbox本身的容量只有几G，于是有了自己动刀写一个网盘的客户端，首先想到的是百度网盘，2T的巨大容量肯定是够用了！ 没想到这个决定却是悲剧的开始，按照百度PCS的API文档写了半天，没想到PCS开通居然审核">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://wangheng.org/img/avatar.png">
+<meta property="article:published_time" content="2015-05-27T05:01:02.000Z">
+<meta property="article:modified_time" content="2025-05-10T10:23:15.624Z">
+<meta property="article:author" content="all4fun">
+<meta property="article:tag" content="Windows">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="备份">
+<meta property="article:tag" content="awk">
+<meta property="article:tag" content="curl">
+<meta property="article:tag" content="shell">
+<meta property="article:tag" content="开源">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://wangheng.org/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "kuaipan_uploader开发分享",
+  "url": "http://wangheng.org/kuaipan-uploader-dev-share.html",
+  "image": "http://wangheng.org/img/avatar.png",
+  "datePublished": "2015-05-27T05:01:02.000Z",
+  "dateModified": "2025-05-10T10:23:15.624Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "all4fun",
+      "url": "http://wangheng.org"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="http://wangheng.org/kuaipan-uploader-dev-share.html"><link rel="preconnect"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/pluginsSrc/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: all4fun","link":"链接: ","source":"来源: all4fun blog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'medium_zoom',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: '/pluginsSrc/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'kuaipan_uploader开发分享',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 5.4.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">132</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/wiki/"><i class="fa-fw fas fa-pencil-alt"></i><span> 笔记</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 其他</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/projects/"><i class="fa-fw fas fa-boxes"></i><span> 作品</span></a></li><li><a class="site-page child" href="/files/"><i class="fa-fw fas fa-folder-open"></i><span> 文件</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">all4fun blog</span></a><a class="nav-page-title" href="/"><span class="site-name">kuaipan_uploader开发分享</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间线</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/wiki/"><i class="fa-fw fas fa-pencil-alt"></i><span> 笔记</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 其他</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/projects/"><i class="fa-fw fas fa-boxes"></i><span> 作品</span></a></li><li><a class="site-page child" href="/files/"><i class="fa-fw fas fa-folder-open"></i><span> 文件</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">kuaipan_uploader开发分享</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2015-05-27T05:01:02.000Z" title="发表于 2015-05-27 13:01:02">2015-05-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux/">linux</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><content>
+<strong><em>PS：将原来的一篇文章拆开了，<a href="http://wangheng.org/kuaipan-uploader.html">上篇</a>是安装使用讲解，这篇是开发过程讲解。</em></strong>
+
+<p>以前使用dropbox的linux客户端<a href="http://wangheng.org/site-backup-to-ftp-and-dropbox.html">备份</a>VPS上的文件和数据，但是近来dorpbox在国内越来越难访问，加上dropbox本身的容量只有几G，于是有了自己动刀写一个网盘的客户端，首先想到的是百度网盘，2T的巨大容量肯定是够用了！</p>
+<p>没想到这个决定却是悲剧的开始，按照百度PCS的API文档写了半天，没想到PCS开通居然审核了一周多还不通过！ 联系客服，没想到他们的PCS API已经不审核新的申请了！再次吐槽下，你不审核，申请的时候就不能给个提示么！！！ 遂放弃！</p>
+<p>然后就想到了还是用金山快盘吧，前段时间刚被迅雷收购，速度方面应该是没有问题。找到金山快盘的官方开放平台，看了看文档似乎是…有点麻烦啊。不过本着有难度才有挑战的原则，还是开搞了。下面介绍下开发过程中遇到的一些问题。</p>
+<p>首先就是快盘的授权机制，本来是不太复杂，但是它的授权流程签名并不支持PLAINTEXT明文文本格式，只支持了一个HMAC-SHA1加密方式。为了处理这个签名倒是走了一些弯路。</p>
+<p>拿到授权token的过程可以总结为三歩走：</p>
+<blockquote><ol>
+    <li>获取未授权的临时 token；</li>
+    <li>用户登陆并授权你的应用；</li>
+    <li>根据临时 token换取真实的 access_token。</li></ol></blockquote>
+
+
+<p>图示如下：</p>
+<p><a href="uploads/2015/05/oauth_info.png"><img class="alignleft  wp-image-95093" src="uploads/2015/05/oauth_info-300x179.png" alt="授权流程" width="330" height="197" /></a></p>
+<p>在每次请求中，下面几个参数是必须的</p>
+<table width="600"><tbody><tr><td><strong>Name</strong></td><td><strong>Required</strong></td><td width="77"><strong>Type </strong><strong>and Limit</strong></td><td width="387"><strong>Description</strong></td></tr><tr><td>oauth_consumer_key</td><td>Y</td><td width="77">string</td><td width="387">第1步的 consumer_key</td></tr><tr><td>oauth_signature</td><td>Y</td><td width="77">string</td><td width="387">本次请求的签名,生成方法请参考<a target="_blank" rel="noopener" href="http://www.kuaipan.cn/developers/document_signature.htm">附录-签名生成算法</a></td></tr><tr><td>oauth_timestamp</td><td>Y</td><td width="77">int</td><td width="387">时间戳，正整数，和标准时间不超过5分钟</td></tr><tr><td>oauth_nonce</td><td>Y</td><td width="77">string</td><td width="387">[ 0-9A-Za-z_ ]随机字符串,长度小于32字节。每次请求请使用不同的nonce</td></tr></tbody></table>
+oauth_consumer_key可以在你创建应用的时候拿到，oauth_timestamp为标准的unix时间戳格式，oauth_nonce每次都生成一个随机数，这几个参数都非常好处理，主要就是oauth_signature这个费些周章。
+
+<p>官方的OAuth签名生成讲的比较具体，其实获取签名的方式也非常简单：</p>
+<ul>
+    <li>计算串基</li>
+    <li>根据串基按HMAC-SHA1获取签名并使用bash64和url_encode 转码</li></ul>
+生成签名的时候，如果是申请request_token 那么HMAC_SHA1加密的key 就是你的consumer_secret+&amp;，其他都是consumer_secret+&amp;+oauth_token_secret！
+
+<p>Linux shell中处理url_encode 没有太好的办法，我索性就写了一个函数用sed处理了，代码如下：</p>
+<pre class="brush: bash; gutter: true">#url encode
+function url_encode
+{
+
+    url=$1
+    echo -n $(echo -n &quot;$url&quot; | sed &#039;s/\%/\%25/g&#039;|sed &#039;s/&amp;/\%26/g&#039; |sed &#039;s/:/\%3A/g&#039; |sed &#039;s/\//\%2F/g&#039;| sed &#039;s/=/\%3D/g&#039; |sed &#039;s/ /\%20/g&#039; |sed &#039;s/@/\%40/g&#039; |sed &#039;s/+/\%2B/g&#039; |sed &#039;s/\*/\%2A/g&#039;)
+    
+}</pre>
+<p>拼接字符串基可归结为：请求方式&amp;url_encode(请求URL)&amp;(url_encode(参数1+参数2… ))</p>
+<p>使用bash获取签名处理方法如下：</p>
+<pre class="brush: bash; gutter: true">function get_signature
+{
+    method=$1
+    url=$2
+    data=$3
+    token_secret=$4
+    baseUrl=&quot;$1&amp;$(url_encode &quot;$2&quot;)&amp;$(url_encode &quot;$3&quot;)&quot;
+    signature=$(echo -n $baseUrl | openssl dgst -sha1 -binary -hmac &quot;$APP_CONSUMER_SECRET&amp;$token_secret&quot; |base64)
+    
+    echo -n $(url_encode $signature)
+}</pre><span id="more"></span>
+
+<p>有了签名，一切都简单了。按照官方开发文档上参数列表把其他必选的参数拼好就行了。</p>
+<p>请求使用的curl，命令格式如下：</p>
+<p>Curl –s –S –L –d “参数” “请求的URL” –o “本地缓存文件”</p>
+<p>整个脚本的源码如下：</p>
+<pre class="brush: bash; gutter: true">#!/usr/bin/env bash
+#
+# KuaiPan Uploader
+#
+#===========================================================================
+# Copyright (C) 2014-2015 wangheng &lt;wujiwh@gmail.com&gt;
+#
+# This file is part of Kuaipan Uploader source code.
+#
+# Kuaipan Uploader is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the License,
+# or (at your option) any later version.
+#
+# Kuaipan Uploader is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Foobar; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#===========================================================================
+
+#===========================================================================
+#     FileName: kuaipan_uploader.sh
+#         Desc: API Doc is: http://www.kuaipan.cn/developers/document.htm
+#       Author: wangheng
+#        Email: wujiwh@gmail.com
+#     HomePage: http://wangheng.org
+#      Version: 1.0.1
+#   LastChange: 2015-05-09 09:34:59
+#      History:
+#===========================================================================
+
+#配置文件.
+CONFIG_FILE=~/.kuaipan_upload.conf
+
+RESPONSE_FILE=&quot;/tmp/resp_kuaipan&quot;
+COOKIE_FILE=&quot;/tmp/kuaipan.cookie&quot;
+
+Version=&quot;1.0.1&quot;
+
+#使用整个快盘此处填&quot;kuaipan&quot;，使用应用目录填&quot;app_folder&quot;
+ROOT_DIR=&quot;app_folder&quot;
+
+#这里改为你自己应用的consumer_key和consumer_secret_key
+APP_CONSUMER_KEY=&quot;xc0kwh2EAKlTQqCd&quot;
+APP_CONSUMER_SECRET=&quot;6mnnfufVvWzPzOgb&quot;
+
+#授权相关
+API_REQUEST_TOKEN_URL=&quot;https://openapi.kuaipan.cn/open/requestToken&quot;
+API_USER_AUTH_URL=&quot;https://www.kuaipan.cn/api.php?ac=open&amp;op=authorise&amp;oauth_token=&quot;
+API_AUTH_TOKEN_URL=&quot;https://openapi.kuaipan.cn/open/accessToken&quot;
+
+#统计信息相关
+API_ACCOUNT_INFO_URL=&quot;http://openapi.kuaipan.cn/1/account_info&quot;
+API_METADATA_URL=&quot;http://openapi.kuaipan.cn/1/metadata&quot;
+
+#上传、下载、删除
+API_UPLOAD_REQUEST_URL=&quot;http://api-content.dfs.kuaipan.cn/1/fileops/upload_locate&quot;
+API_DOWNLOAD_URL=&quot;http://api-content.dfs.kuaipan.cn/1/fileops/download_file&quot;
+API_DELETE_FILE_URL=&quot;http://openapi.kuaipan.cn/1/fileops/delete&quot;
+
+
+Dependents=&quot;curl sed awk basename date grep tr od openssl base64&quot;
+CURL=&quot;curl&quot; 
+
+#检查程序的依赖项
+for i in $Dependents; do
+    which $i &gt; /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e &quot;Error: $i Not Found&quot;
+        exit 1
+    fi
+done
+
+#清理环境
+if [ -f &quot;$RESPONSE_FILE&quot; ]; then
+    rm -f $RESPONSE_FILE
+fi
+
+#==========通用方法========
+
+function get_json_value()
+{
+    KEY=$1
+    echo $(cat $RESPONSE_FILE| sed &#039;s/ //g&#039;| sed -n &#039;s/.*&#039;$KEY&#039;&quot;:&quot;\([a-zA-Z0-9\.\-\/:]*\)&quot;.*/\1/p&#039;)
+}
+
+#get unix timestamp
+function unix_time
+{
+    echo $(date +%s)
+}
+
+#url encode
+function url_encode
+{
+    url=$1
+    echo -n $(echo -n &quot;$url&quot; | sed &#039;s/\%/\%25/g&#039;|sed &#039;s/&amp;/\%26/g&#039; |sed &#039;s/:/\%3A/g&#039; |sed &#039;s/\//\%2F/g&#039;| sed &#039;s/=/\%3D/g&#039; |sed &#039;s/ /\%20/g&#039; |sed &#039;s/@/\%40/g&#039; |sed &#039;s/+/\%2B/g&#039; |sed &#039;s/\*/\%2A/g&#039;)
+    #echo -ne $(echo $url |tr -d &#039;\n&#039; |od -An -tx1 |tr &#039;[a-z]&#039; &#039;[A-Z]&#039; |tr &#039; &#039; \%)
+}
+
+#url decode
+function url_decode
+{
+    url=$1
+    echo -ne $(echo -n $url | sed &#039;s/\\/\\\\/g;s/\(%\)\([0-9a-fA-F][0-9a-fA-F]\)/\\x\2/g&#039;)&quot;\n&quot;
+}
+
+function get_signature
+{
+    method=$1
+    url=$2
+    data=$3
+    token_secret=$4
+    baseUrl=&quot;$1&amp;$(url_encode &quot;$2&quot;)&amp;$(url_encode &quot;$3&quot;)&quot;
+    signature=$(echo -n $baseUrl | openssl dgst -sha1 -binary -hmac &quot;$APP_CONSUMER_SECRET&amp;$token_secret&quot; |base64)
+    
+    echo -n $(url_encode $signature)
+}
+
+function account_setup
+{
+    #1. 获取未授权的临时 token；
+    DATA=&quot;oauth_consumer_key=$APP_CONSUMER_KEY&amp;oauth_nonce=$RANDOM&amp;oauth_signature_method=HMAC-SHA1&amp;oauth_timestamp=$(unix_time)&amp;oauth_version=1.0&quot;
+    oauth_signature=$(get_signature &#039;GET&#039; $API_REQUEST_TOKEN_URL &quot;$DATA&quot;)
+    $CURL -k -s -S --globoff -L -G -d &quot;$DATA&amp;oauth_signature=$oauth_signature&quot; &quot;$API_REQUEST_TOKEN_URL&quot; -o &quot;$RESPONSE_FILE&quot; 
+    
+    tmp_oauth_token=$(get_json_value &#039;oauth_token&#039;)
+    tmp_oauth_token_secret=$(get_json_value &#039;oauth_token_secret&#039;)
+
+
+    #2. 浏览器访问URL获取授权
+    echo -ne &quot;\nVisit this URL from your Browser, and login with your kuaipan account\n&quot;
+    echo -ne &quot;\n --&gt; $API_USER_AUTH_URL$tmp_oauth_token \n&quot;
+    echo -ne &quot;\nPress enter when done...\n&quot;
+    read
+
+    #3. 获取真实oauth_token
+    DATA=&quot;oauth_consumer_key=$APP_CONSUMER_KEY&amp;oauth_nonce=$RANDOM&amp;oauth_signature_method=HMAC-SHA1&amp;oauth_timestamp=$(unix_time)&amp;oauth_token=$tmp_oauth_token&quot;
+    oauth_signature=$(get_signature &#039;GET&#039; $API_AUTH_TOKEN_URL &quot;$DATA&quot; $tmp_oauth_token_secret)
+    
+    $CURL -k -s -S -L -G -d &quot;$DATA&amp;oauth_signature=$oauth_signature&quot; $API_AUTH_TOKEN_URL -o &quot;$RESPONSE_FILE&quot;
+
+    OAUTH_TOKEN=$(get_json_value &#039;oauth_token&#039;)
+    OAUTH_TOKEN_SECRET=$(get_json_value &#039;oauth_token_secret&#039;)
+
+    if [ -n &quot;$OAUTH_TOKEN&quot; -a -n &quot;$OAUTH_TOKEN_SECRET&quot; -a -n &quot;$APP_CONSUMER_KEY&quot; ]; then
+            echo -ne &quot;Congratulations!!! login succeed!\n&quot;
+            
+            #Saving data
+            echo &quot;APP_CONSUMER_KEY:$APP_CONSUMER_KEY&quot; &gt; &quot;$CONFIG_FILE&quot;
+            echo &quot;APP_CONSUMER_SECRET:$APP_CONSUMER_SECRET&quot; &gt;&gt; &quot;$CONFIG_FILE&quot;
+            echo &quot;OAUTH_TOKEN:$OAUTH_TOKEN&quot; &gt;&gt; &quot;$CONFIG_FILE&quot;
+            echo &quot;OAUTH_TOKEN_SECRET:$OAUTH_TOKEN_SECRET&quot; &gt;&gt; &quot;$CONFIG_FILE&quot;
+            
+            echo -ne &quot;All saved as $CONFIG_FILE!\n\n&quot;
+        else
+            echo -ne &quot;Unfortunately!!! login failed! please retray or contact wujiwh@gmail.com for help! \n\n&quot;
+    fi
+
+}
+
+function account_relink
+{
+    echo -ne &quot;Warrning: \nAre you sure? [y/n]y&quot;
+    read aw
+    if [ &quot;$aw&quot; == &quot;n&quot; ];then
+        echo -ne &quot;Cancelled! \n&quot;
+    else
+        rm -f &quot;$CONFIG_FILE&quot;
+        account_setup
+    fi
+}
+
+#========== First Setup ========== 
+#先检查本地是否存在配置文件
+if [ -f &quot;$CONFIG_FILE&quot; ]; then
+      
+    APP_CONSUMER_KEY=$(sed -n &#039;s/APP_CONSUMER_KEY:\([a-zA-Z0-9]*\)/\1/p&#039; &quot;$CONFIG_FILE&quot;)
+    APP_CONSUMER_SECRET=$(sed -n &#039;s/APP_CONSUMER_SECRET:\([a-zA-Z0-9]*\)/\1/p&#039; &quot;$CONFIG_FILE&quot;)
+    OAUTH_TOKEN=$(sed -n &#039;s/OAUTH_TOKEN:\([a-zA-Z0-9\.]*\)/\1/p&#039; &quot;$CONFIG_FILE&quot;)
+    OAUTH_TOKEN_SECRET=$(sed -n &#039;s/OAUTH_TOKEN_SECRET:\([a-zA-Z0-9\.]*\)/\1/p&#039; &quot;$CONFIG_FILE&quot;)
+    
+    if [ -z &quot;$APP_CONSUMER_KEY&quot; -o -z &quot;$APP_CONSUMER_SECRET&quot; -o -z &quot;$OAUTH_TOKEN&quot; -o -z &quot;$OAUTH_TOKEN_SECRET&quot; ]; then
+        echo -ne &quot;Cannot loading data from $CONFIG_FILE...\n&quot;
+        echo -ne &quot;Please run [$0 relink] to retray! \n&quot;
+        exit 1
+    fi
+    
+#新用户，获取Token并保存到配置文件
+else
+    account_setup
+fi
+
+
+#========= OAUTH API 功能实现 =========
+
+function get_common_oauthdata
+{
+    echo &quot;oauth_consumer_key=$APP_CONSUMER_KEY&amp;oauth_nonce=$RANDOM&amp;oauth_signature_method=HMAC-SHA1&amp;oauth_timestamp=$(unix_time)&amp;oauth_token=$OAUTH_TOKEN&quot;
+}
+
+#获取用户信息
+function account_info()
+{
+    OAUTH_DATA=&quot;oauth_consumer_key=$APP_CONSUMER_KEY&amp;oauth_nonce=$RANDOM&amp;oauth_signature_method=HMAC-SHA1&amp;oauth_timestamp=$(unix_time)&amp;oauth_token=$OAUTH_TOKEN&quot;
+    signature=$(get_signature &#039;GET&#039; $API_ACCOUNT_INFO_URL &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    
+    $CURL -k -s -S -G -L -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$API_ACCOUNT_INFO_URL&quot; -o &quot;$RESPONSE_FILE&quot;
+    
+    userName=$(sed -n &#039;s/.*user_name&quot;:&quot;\([a-zA-Z0-9\.\-\@]*\)&quot;.*/\1/p&#039; $RESPONSE_FILE) 
+    let quota_total=$(sed -n &#039;s/.*quota_total&quot;:\([0-9]*\),.*/\1/p&#039; $RESPONSE_FILE)/1024/1024/1024
+    let quota_used=$(sed -n &#039;s/.*quota_used&quot;:\([0-9]*\),.*/\1/p&#039; $RESPONSE_FILE)/1024/1024/1024
+    
+    echo &quot;&quot;
+    echo &quot;User Name: $userName&quot;
+    echo &quot;Total Quota: $quota_total GB&quot;
+    echo &quot;Used Quota: $quota_used GB&quot;
+    echo &quot;&quot;
+}
+
+#文件上传
+function file_upload
+{
+    local overwrite=$1
+    local file_Local=$2
+    local file_Remote=$3
+
+    if [ -z &quot;$file_Remote&quot; ]; then
+        file_Remote=$(basename &quot;$file_Local&quot;)
+    fi
+
+    OAUTH_DATA=$(get_common_oauthdata)
+    signature=$(get_signature &#039;GET&#039; $API_UPLOAD_REQUEST_URL &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    $CURL -k -s -S -G -L -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$API_UPLOAD_REQUEST_URL&quot; -o &quot;$RESPONSE_FILE&quot;
+    
+    upload_url=$(get_json_value &quot;url&quot;)&quot;1/fileops/upload_file&quot;
+    #echo $upload_url
+
+    OAUTH_DATA=&quot;oauth_consumer_key=$APP_CONSUMER_KEY&amp;oauth_nonce=$RANDOM&amp;oauth_signature_method=HMAC-SHA1&amp;oauth_timestamp=$(unix_time)&amp;oauth_token=$OAUTH_TOKEN&amp;overwrite=$overwrite&amp;path=$(url_encode $file_Remote)&amp;root=app_folder&quot;
+    signature=$(get_signature &#039;POST&#039; $upload_url &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    
+    $CURL -k --progress-bar -i -o &quot;$RESPONSE_FILE&quot; -F &quot;file=@$file_Local&quot; &quot;$upload_url?$OAUTH_DATA&amp;oauth_signature=$signature&quot; 
+    
+    grep &quot;HTTP/1.1 200 OK&quot; &quot;$RESPONSE_FILE&quot; &gt; /dev/null
+    if [ $? -eq 0 ]; then
+        echo -ne &quot;--Upload Success.\n&quot;
+    else
+        echo -ne &quot;--Upload Failed.\n&quot;
+        echo -ne &quot;--Error occurred while uploading $file_Local.\n&quot;
+        exit 1
+    fi   
+    #cat $RESPONSE_FILE
+}
+
+#下载文件
+function file_download
+{
+    local file_Remote=$1
+    local file_Local=$2
+
+    echo -ne &quot;Begin to download $file_Remote...\n&quot;
+    OAUTH_DATA=$(get_common_oauthdata)&quot;&amp;path=$(url_encode $file_Remote)&amp;root=$ROOT_DIR&quot;
+    signature=$(get_signature &#039;GET&#039; $API_DOWNLOAD_URL &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    #$CURL -S -L -v -G -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$API_DOWNLOAD_URL&quot; -o &quot;$file_Local&quot;
+    $CURL -L --compressed --progress-bar -G -D &quot;$RESPONSE_FILE&quot; -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$API_DOWNLOAD_URL&quot; --cookie-jar &quot;$COOKIE_FILE&quot; -o &quot;$file_Local&quot;
+    rm -f $COOKIE_FILE
+
+    grep &quot;HTTP/1.1 200 OK&quot; &quot;$RESPONSE_FILE&quot; &gt; /dev/null
+    if [ $? -eq 0 ]; then
+        echo -ne &quot;--Download Success.\n&quot;
+    else
+        echo -ne &quot;--Download Failed.\n&quot;
+        exit 1
+    fi   
+}
+
+#删除文件
+function file_delete
+{
+    local file_Remote=$1
+
+    OAUTH_DATA=$(get_common_oauthdata)&quot;&amp;path=$file_Remote&amp;root=$ROOT_DIR&quot;
+    signature=$(get_signature &#039;GET&#039; $API_DELETE_FILE_URL &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    $CURL -k -s -S -i -S -L -G -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$API_DELETE_FILE_URL&quot; -o &quot;$RESPONSE_FILE&quot;
+    
+    grep &quot;HTTP/1.1 200 OK&quot; &quot;$RESPONSE_FILE&quot; &gt; /dev/null
+    if [ $? -eq 0 ]; then
+        echo -ne &quot;\033[0;32;1m--Delete Success.\033[0m\n&quot;
+    else
+        echo -ne &quot;\033[0;31;1m--Delete Failed.\033[0m\n&quot;
+        exit 1
+    fi   
+    echo &quot;&quot;
+}
+
+#显示文件夹信息，默认显示根目录
+function show_list
+{
+    local remote_path=$1
+
+    local metaUrl=&quot;$API_METADATA_URL/$ROOT_DIR/$remote_path&quot;
+    OAUTH_DATA=$(get_common_oauthdata)
+    signature=$(get_signature &#039;GET&#039; $metaUrl &quot;$OAUTH_DATA&quot; $OAUTH_TOKEN_SECRET)
+    $CURL -k -s -S -G -L -d &quot;$OAUTH_DATA&amp;oauth_signature=$signature&quot; &quot;$metaUrl&quot; -o &quot;$RESPONSE_FILE&quot;
+
+    sed &#039;s/,/\n/g&#039; $RESPONSE_FILE|grep name|awk -F &#039;:&#039; &#039;{print $2}&#039;|tr -d &#039;&quot;&#039;|tr &quot;\n&quot; &quot;\t&quot;|sed &#039;s/$/\n/&#039;
+}
+
+#=====================================
+
+function usage() {
+    echo -e &quot;KuaiPan Uploader v$Version&quot;
+    echo -e &quot;wangheng - wujiwh@gmail.com\n&quot;
+    echo -e &quot;Usage: $0 COMMAND [PARAMETERS]...&quot;
+    echo -e &quot;\nCommands:&quot;
+    
+    echo -e &quot;\t upload   [local file]  &lt;remote file&gt;&quot;
+    echo -e &quot;\t download [remote file] &lt;local file&gt;&quot;
+    echo -e &quot;\t delete   [remote file/remote dir]&quot;
+    echo -e &quot;\t list     &lt;remote dir&gt;&quot;
+    echo -e &quot;\t info&quot;
+    echo -e &quot;\t relink&quot;
+    
+    echo -en &quot;\nFor more informations, please visit \033[0;32;1m http://wangheng.org.\033[0m \n\n&quot;
+    exit 1
+}
+
+#===============Main =================
+COMMAND=$1
+
+case $COMMAND in
+
+    upload)
+
+        file_Local=$2
+        file_Remote=$3
+
+        #检查本地文件是否存在
+        if [ ! -f &quot;$file_Local&quot; ]; then
+            echo -e &quot;Error: Please specify a valid source file!&quot;
+            exit 1
+        fi
+                
+        
+        file_upload &quot;True&quot; &quot;$file_Local&quot; &quot;$file_Remote&quot;
+        
+    ;;
+
+    download)
+
+        file_Remote=$2 
+        file_Local=$3  
+
+        if [ -z &quot;$file_Remote&quot; ]; then
+            echo -ne &quot;Error: Please input a valid remote file.\n&quot;
+            exit 1
+        fi
+
+        if [ -z &quot;$file_Local&quot; ]; then
+            file_Local=$(basename &quot;$file_Remote&quot;)
+        fi
+        
+        file_download &quot;$file_Remote&quot; &quot;$file_Local&quot;
+        
+    ;;
+
+       
+    info)
+    
+        account_info
+    
+    ;;
+
+    delete)
+
+        file_Remote=$2    
+
+        if [ -z &quot;$file_Remote&quot; ]; then
+            echo -ne &quot;Error: Please input a valid remote file.\n&quot;
+            exit 1
+        fi
+
+        file_delete &quot;$file_Remote&quot;
+
+    ;;
+
+    list)
+
+        RemoteDir=$2
+        if [ -z &quot;$RemoteDir&quot; ]; then
+            RemoteDir=&quot;/&quot;
+        fi
+        
+        show_list &quot;$RemoteDir&quot;
+
+    ;;
+        
+    relink)
+        account_relink    
+    ;;
+            
+    *)
+        usage
+    ;;
+
+esac</pre>
+<p>&nbsp;</p>
+<p><strong>项目开源在我的Github</strong>：<a target="_blank" rel="noopener" href="https://github.com/wujiwh/kuaipan_uploader">https://github.com/wujiwh/kuaipan_uploader</a></p>
+<p>欢迎大家多多交流~~<br></content></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://wangheng.org">all4fun</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://wangheng.org/kuaipan-uploader-dev-share.html">http://wangheng.org/kuaipan-uploader-dev-share.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://wangheng.org" target="_blank">all4fun blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Windows/">Windows</a><a class="post-meta__tags" href="/tags/Linux/">Linux</a><a class="post-meta__tags" href="/tags/%E5%A4%87%E4%BB%BD/">备份</a><a class="post-meta__tags" href="/tags/awk/">awk</a><a class="post-meta__tags" href="/tags/curl/">curl</a><a class="post-meta__tags" href="/tags/shell/">shell</a><a class="post-meta__tags" href="/tags/%E5%BC%80%E6%BA%90/">开源</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="/pluginsSrc/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="/pluginsSrc/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/imgages/wechat.png" target="_blank"><img class="post-qr-code-img" src="/imgages/wechat.png" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/imgages/alipay.png" target="_blank"><img class="post-qr-code-img" src="/imgages/alipay.png" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/migrating-from-wordpress-to-hexo.html" title="从wordpress迁移到hexo填坑"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">从wordpress迁移到hexo填坑</div></div><div class="info-2"><div class="info-item-1">前记用了好久的wordpress，说起来上次更新还是三年前。今天本想整理总结下最近的学习，却总也打不开wp-admin后台了，看了下是vps的php进程有报错 :( 想了想wordpress这套框架虽然很好，然而好多功能对我来说并不是必要的，于是动了心思从wordpress 迁移到静态化的博客框架 hexo。当然另外一个好处就是可以用 Markdown 语法写日志了 :) 迁移过程遇到一些坑，这里做下备忘… 开始迁移安装hexo网上安装hexo的文章已经很多了，这里不再冗述，大概流程就是  1、安装nodejs 2、配置环境变量 3、npm install -g hexo-cli 4、初始化站点 hexo init blog_dir 5、修改_config.yml  导出wordpress文章因为无法打开博客的后台管理，只能在本地临时又搭建了一套wordpress 环境，这里再次坚定了迁移的决心(弄php+mysql+nginx这一套只用来写博客，太麻烦了)访问后台 – 工具 – 导出，下载导出的文件，你将得到一个 .XML 文件，这个XML文件包含全部文章、页面、评论、自定义栏...</div></div></div></a><a class="pagination-related" href="/kuaipan-uploader.html" title="linux版快盘上传下载脚本"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">linux版快盘上传下载脚本</div></div><div class="info-2"><div class="info-item-1"> PS:将脚本的开发过程移动到了这里。想了解下开发步骤的可以参考~~   安装使用 此脚本适用于大部分bash环境，已经在cygwin,ubuntu14.04,debian,centos6,mac-osx等环境通过测试。  1.依赖项使用此程序前请确认你的Linux或者Cygwin支持如下命令： curl sed awk basename date grep tr od openssl base642.配置  如果你想使用自己的app_key你需要首先注册一个金山快盘账号，然后到这里地址创建一个你自己的应用并把得到的 consumer_key、consumer_secret填写到脚本相应位置。当然此步骤可以略过，你可以直接使用脚本中填写好的consumer_key、consumer_secret，我创建的应用名称all4fun. 3.安装wget https://github.com/wujiwh/kuaipan_uploader/archive/master.zipunzip master.zipcd kuaipan_uploader-master#或者 ：git clone ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/kuaipan-uploader.html" title="linux版快盘上传下载脚本"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2015-05-13</div><div class="info-item-2">linux版快盘上传下载脚本</div></div><div class="info-2"><div class="info-item-1"> PS:将脚本的开发过程移动到了这里。想了解下开发步骤的可以参考~~   安装使用 此脚本适用于大部分bash环境，已经在cygwin,ubuntu14.04,debian,centos6,mac-osx等环境通过测试。  1.依赖项使用此程序前请确认你的Linux或者Cygwin支持如下命令： curl sed awk basename date grep tr od openssl base642.配置  如果你想使用自己的app_key你需要首先注册一个金山快盘账号，然后到这里地址创建一个你自己的应用并把得到的 consumer_key、consumer_secret填写到脚本相应位置。当然此步骤可以略过，你可以直接使用脚本中填写好的consumer_key、consumer_secret，我创建的应用名称all4fun. 3.安装wget https://github.com/wujiwh/kuaipan_uploader/archive/master.zipunzip master.zipcd kuaipan_uploader-master#或者 ：git clone ...</div></div></div></a><a class="pagination-related" href="/cmd-in-window-property-the-settings.html" title="CMD窗口属性设置"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-05-20</div><div class="info-item-2">CMD窗口属性设置</div></div><div class="info-2"><div class="info-item-1"> 首先打开注册表编辑器，Win+R(win就是那个Windows标志的按键)。具体设置参考如下：  1、默认设置：保存在 HKEY_CURRENT_USER\Console2、自定义设置：保存在 [HKEY_CURRENT_USER\Console%SystemRoot%_system32_cmd.exe] 里面是一些自定义的设置，优先级高于默认设置。3、各键及其值所代表的意义：“WindowPosition”=dword:00640104“CodePage”=dword:000003a8“FontSize”=dword:00100008“FontFamily”=dword:00000030“FontWeight”=dword:00000190“HistoryNoDup”=dword:00000000“FullScreen”=dword:00000000“ScreenColors”=dword:000000ce“ScreenBufferSize”=dword:12c00504、键值意义：注：各键值均为十六进制表示窗口位置—–WindowPosition—高四位为上，低四位为左。如...</div></div></div></a><a class="pagination-related" href="/efficient-office-support-tool-autohotkey.html" title="高效办公辅助工具Autohotkey"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-06-09</div><div class="info-item-2">高效办公辅助工具Autohotkey</div></div><div class="info-2"><div class="info-item-1"> 序：工欲善其事，必先利其器。近期工作中要对公司的AFP软件进行汉化，由此也带来了大量的重复性工作，海量的字符串提取，组合，规整，键盘鼠标表示压力颇大~ 为此特别找回了大学玩魔兽对战用的改键插件Autohotkey，嘿嘿。  AutoHotKey 软件可以实现很多有趣的功能，可以简化你的重复性工作。这里下载  选择一个适合你的版本，办公环境稳定的可以选择安装版，需要便携要求的可以下载绿色版本，当然安装版的好处是：系统会自动关联 .ahk 文件。安装完成后打开Autohotkey软件，然后你会在系统托盘处看到一个H字样的小图标。现在右击托盘处图标，选择Edit this Script来设置。   在打开的配置文件中加入你需要的功能。例如：加入   #w::Run wangheng.org  然后选择Reload This Script，现在按win键(小旗标识那个键)+w，怎么样是不是直接在浏览器打开本博的主页呢？  这里简单地解释一下那两行语句的意思：#号代表 Win 键；两个英文冒号作为热键和命令的分隔符使用；run是Autohotkey中常用的命令之一，它的后面是要运行的程序...</div></div></div></a><a class="pagination-related" href="/iis-identify-attributes-targetframework-managedpipelinehandler.html" title="IIS无法识别的属性targetFramework、错误模块ManagedPipelineHandler"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-04-25</div><div class="info-item-2">IIS无法识别的属性targetFramework、错误模块ManagedPipelineHandler</div></div><div class="info-2"><div class="info-item-1"> 微软服务器与开发工具事业部 黄捷 原文地址  如果你创建寄宿在IIS中的WCF Service网站项目，（图1显示怎样创建这样的网站项目），或者你把你的WCF Web Application项目或者WCF Service网站项目发布或部署到IIS网站服务器上后，你可以用网页浏览器去访问你的网站。如果你在尝试打开这些网页时无法看到正确的页面显示，或者看到错误提示页面(图2是错误提示页面的一个例子: HTTP Error 500.21 – Internal Server Error Handler “svc-Integrated” has a bad module “ManagedPipelineHandler” in its module list)，下面是最常见的问题和解决办法。   图1  图2常见问题与解决办法： 1. 检查IIS是否正确安装和运行 你需要保证你的IIS服务器已经正确安装并正常运行。这里我们不讨论IIS安装的方法(你可你根据你的Windows版本和需要的IIS版本去bing中搜索)， 只给出简单的验证方法。如图2所示，在IE地址栏中输入http://loca...</div></div></div></a><a class="pagination-related" href="/implementation-windows-version-the-the-the-cron.html" title="C#实现Windows版Cron"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-06-10</div><div class="info-item-2">C#实现Windows版Cron</div></div><div class="info-2"><div class="info-item-1"> 由于用惯了Linux下面的Cron工具，平时在Windows下面工作却总是不适应Task Schedule，于是自己写了一个Cron for Windows。功能已经基本实现，不过可能有一些小bug。思路很简单，利用线程起一个Timer，然后每分钟去检查一下是不是有符合的规则，添加符合则执行crontab最后的command参数。源码托管在https://github.com/wujiwh/Cron，欢迎各位同学批评指正。  具体核心代码如下：(加到github项目托管)  我把Cron作为了一个Windows Service并且把ServiceInstaller的StartType设置为了Automatic来保证每次重启系统后能自动启动服务。同时serviceProcessInstaller的Account属性设置成LocalSystem来保证服务对于的进程有较高的系统权限。 使用方法很简单，将cron.exe利用.net的installutil.exe安装到系统服务（需要.net4 framework），然后在c:\cron目录中新建一个crontab文件，对照cron说明...</div></div></div></a><a class="pagination-related" href="/manually-produced-vpn-login.html" title="手动制作VPN登录器"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2012-06-12</div><div class="info-item-2">手动制作VPN登录器</div></div><div class="info-2"><div class="info-item-1"> 1、新建一个文本文件，重命名，文件名可以随便取但是后缀必须为.pbk。输入如下内容：  [要显示的拨号名称]  Encoding=1  PBVersion=1  Type=2  AutoLogon=0  UseRasCredentials=1NETCOMPONENTS=  ms_msclient=1  ms_server=1MEDIA=rastapi  Port=VPN1-0  Device=WAN Miniport (IKEv2)  DEVICE=vpn  PhoneNumber=服务器的IP或域名  AreaCode=  CountryCode=0  CountryID=0  UseDialingRules=0  Comment=  FriendlyName=  LastSelectedPhone=0  PromoteAlternates=0  TryNextAlternateOnFail=1  [ XXX] 部分是需要你修改的内容，请分别修改为你要显示的名称和你Vpn服务器的地址。最后，注意将后缀名改成.pbk，如果你看到不后缀名，请打开：控制面板-&gt;文件夹选项-&...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">all4fun</div><div class="author-info-description">make progress little day by day.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">132</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/all4fun"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/all4fun" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:wujiwh@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">VPS 香港服务器推荐：<a href="https://vollcloud.com/aff.php?aff=224" target="_blank"> VollCloud HK CMI服务器</a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/migrating-from-wordpress-to-hexo.html" title="从wordpress迁移到hexo填坑">从wordpress迁移到hexo填坑</a><time datetime="2018-10-22T05:50:30.000Z" title="发表于 2018-10-22 13:50:30">2018-10-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/kuaipan-uploader-dev-share.html" title="kuaipan_uploader开发分享">kuaipan_uploader开发分享</a><time datetime="2015-05-27T05:01:02.000Z" title="发表于 2015-05-27 13:01:02">2015-05-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/kuaipan-uploader.html" title="linux版快盘上传下载脚本">linux版快盘上传下载脚本</a><time datetime="2015-05-13T09:16:39.000Z" title="发表于 2015-05-13 17:16:39">2015-05-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/ubuntu-14-04-install-configure-denyhosts.html" title="ubuntu 安装配置denyhosts">ubuntu 安装配置denyhosts</a><time datetime="2015-05-06T01:19:37.000Z" title="发表于 2015-05-06 09:19:37">2015-05-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/raspberry-dht11-yeekink.html" title="raspi+DHT11+yeelink监控家里温湿度">raspi+DHT11+yeelink监控家里温湿度</a><time datetime="2015-01-27T16:25:09.000Z" title="发表于 2015-01-28 00:25:09">2015-01-28</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 By all4fun</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/pluginsSrc/medium-zoom/dist/medium-zoom.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
